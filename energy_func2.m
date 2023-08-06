@@ -1,0 +1,21 @@
+function k_all = energy_func2(d, rho_s, rho_w, theta_s, theta_w)
+    k_fabric = 0.0363; % 织物热导率 单位：W/(mK)
+    k_air = 0.0296;
+    h = 2 * d;
+    A_all = 1 / rho_w * 1 / rho_s;
+    A_air = (1 / rho_w - d) * (1 / rho_s - d);
+    A_fabric = d * (1 / rho_w + 1 / rho_s) - d ^ 2;
+    sub_k_fabric = get_sub_k(k_fabric, theta_s, theta_w);
+    T2_T1 = 0.068552498400567;
+    T3_T2 = 0;
+    Q_air =- A_air / h * k_air * T2_T1;
+    Q_fabric =- A_fabric / h * sub_k_fabric * T2_T1;
+    Q_all = Q_fabric + Q_air;
+    para_fabric = sub_k_fabric / h * A_fabric;
+    x0 = [Q_all, Q_air, Q_fabric, T2_T1, sub_k_fabric, T3_T2];
+    %options = optimoptions('fsolve', 'Display', 'iter');
+    options = optimoptions('fsolve', 'Display', 'off');
+    fun = @(x)equation_2(x, para_fabric, A_all, A_air);
+    [x, fval, exitflag, output] = fsolve(fun, x0, options);
+    k_all = x(5);
+end
